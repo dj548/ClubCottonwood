@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clubCottonwoodApi } from './api/clubCottonwood';
 import type { ClubMember, MembershipStatus } from './types/clubCottonwood';
@@ -14,12 +14,23 @@ type TabId = 'all' | 'active' | 'overdue' | 'prospects';
 export default function ClubCottonwood() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabId>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState(''); // Immediate input value
+  const [searchQuery, setSearchQuery] = useState(''); // Debounced value for API
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [selectedMember, setSelectedMember] = useState<ClubMember | null>(null);
   const [showEmailComposer, setShowEmailComposer] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 25;
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   // Map tab to status filter
   const statusFilter: MembershipStatus | undefined = {
@@ -29,6 +40,9 @@ export default function ClubCottonwood() {
     prospects: 'Prospect',
   }[activeTab] as MembershipStatus | undefined;
 
+  // For "all" tab, filter to only Quack-tagged members (not prospects)
+  const hasQuackTagFilter = activeTab === 'all' ? true : undefined;
+
   // Fetch stats
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ['club-cottonwood', 'stats'],
@@ -37,9 +51,10 @@ export default function ClubCottonwood() {
 
   // Fetch members
   const { data: membersData, isLoading: loadingMembers } = useQuery({
-    queryKey: ['club-cottonwood', 'members', statusFilter, searchQuery, page],
+    queryKey: ['club-cottonwood', 'members', statusFilter, hasQuackTagFilter, searchQuery, page],
     queryFn: () => clubCottonwoodApi.getMembers({
       status: statusFilter,
+      hasQuackTag: hasQuackTagFilter,
       search: searchQuery || undefined,
       page,
       pageSize,
@@ -60,8 +75,11 @@ export default function ClubCottonwood() {
     },
   });
 
+  // "All Members" count = active + overdue (only Quack-tagged, not prospects)
+  const allMembersCount = (stats?.activeMembers ?? 0) + (stats?.overdueMembers ?? 0);
+
   const tabs: { id: TabId; label: string; count?: number }[] = [
-    { id: 'all', label: 'All Members', count: stats?.totalMembers },
+    { id: 'all', label: 'All Members', count: allMembersCount },
     { id: 'active', label: 'Active', count: stats?.activeMembers },
     { id: 'overdue', label: 'Overdue', count: stats?.overdueMembers },
     { id: 'prospects', label: 'Prospects', count: stats?.prospectCount },
@@ -71,11 +89,8 @@ export default function ClubCottonwood() {
     setActiveTab(tabId);
     setPage(1);
     setSelectedMembers([]);
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setPage(1);
+    setSearchInput('');
+    setSearchQuery('');
   };
 
   const handleMemberSelect = (memberId: string, selected: boolean) => {
@@ -168,10 +183,11 @@ export default function ClubCottonwood() {
           <div className="flex items-center justify-between mb-4">
             <div className="relative">
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search by name or email..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className="w-80 pl-10 pr-4 py-2 border border-[#e1e3e5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5CB3E5] focus:border-transparent"
               />
               <svg
