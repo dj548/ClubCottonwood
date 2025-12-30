@@ -46,9 +46,15 @@ export default function ClubCottonwood() {
     }),
   });
 
+  // Track if current sync is a full sync
+  const [isFullSync, setIsFullSync] = useState(false);
+
   // Sync mutation
   const syncMutation = useMutation({
-    mutationFn: () => clubCottonwoodApi.sync(),
+    mutationFn: (full: boolean = false) => {
+      setIsFullSync(full);
+      return clubCottonwoodApi.sync(full);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['club-cottonwood'] });
     },
@@ -118,10 +124,11 @@ export default function ClubCottonwood() {
         </div>
         <SyncStatus
           lastSyncAt={stats?.lastSyncAt}
-          onSync={() => syncMutation.mutate()}
+          onSync={(full) => syncMutation.mutate(full ?? false)}
           isSyncing={syncMutation.isPending}
           syncResult={syncMutation.data}
           syncError={syncMutation.error?.message}
+          isFullSync={isFullSync}
         />
       </div>
 

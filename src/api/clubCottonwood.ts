@@ -63,8 +63,9 @@ export const clubCottonwoodApi = {
   },
 
   // Sync members from Shopify (longer timeout for large datasets)
-  sync: async (): Promise<SyncResponse> => {
+  sync: async (full: boolean = false): Promise<SyncResponse> => {
     const response = await apiClient.post('/admin/club-cottonwood/sync', {}, {
+      params: { full },
       timeout: 300000, // 5 minute timeout for sync
     });
     return response.data;
