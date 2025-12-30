@@ -26,6 +26,12 @@ export const clubCottonwoodApi = {
     return response.data;
   },
 
+  // Get renewal forecast for next 12 months
+  getRenewalForecast: async (): Promise<{ month: string; monthShort: string; renewals: number }[]> => {
+    const response = await apiClient.get('/admin/club-cottonwood/renewal-forecast');
+    return response.data;
+  },
+
   // Get list of members with filtering and pagination
   getMembers: async (params: GetMembersParams = {}): Promise<ClubMemberListResponse> => {
     const response = await apiClient.get('/admin/club-cottonwood/members', { params });

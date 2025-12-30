@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clubCottonwoodApi } from './api/clubCottonwood';
 import type { ClubMember, MembershipStatus } from './types/clubCottonwood';
 import StatsCards from './components/StatsCards';
+import RenewalForecast from './components/RenewalForecast';
 import MemberTable from './components/MemberTable';
 import MemberDetails from './components/MemberDetails';
 import EmailComposer from './components/EmailComposer';
@@ -132,6 +133,9 @@ export default function ClubCottonwood() {
         <>
           {/* Stats Cards */}
           <StatsCards stats={stats} />
+
+          {/* Renewal Forecast */}
+          <RenewalForecast />
 
           {/* Tabs */}
           <div className="flex gap-1 mb-6 bg-[#f6f6f7] p-1 rounded-lg w-fit">
