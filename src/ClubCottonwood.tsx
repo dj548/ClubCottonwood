@@ -75,7 +75,7 @@ export default function ClubCottonwood() {
     },
   });
 
-  // "All Members" count = active + overdue (only Quack-tagged, not prospects)
+  // "All Members" count = active + overdue (only Quack-tagged, not prospects) - v2
   const allMembersCount = (stats?.activeMembers ?? 0) + (stats?.overdueMembers ?? 0);
 
   const tabs: { id: TabId; label: string; count?: number }[] = [
@@ -131,7 +131,7 @@ export default function ClubCottonwood() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#202223] mb-1">
-            Membership Dashboard
+            Club Cottonwood
           </h1>
           <p className="text-sm text-[#6d7175]">
             Manage annual membership and member outreach
