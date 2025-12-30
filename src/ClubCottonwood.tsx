@@ -108,9 +108,8 @@ export default function ClubCottonwood() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-[#202223] mb-2 flex items-center gap-3">
-            <span className="text-4xl">&#x1F986;</span>
-            Club Cottonwood
+          <h1 className="text-2xl font-bold text-[#202223] mb-1">
+            Membership Dashboard
           </h1>
           <p className="text-sm text-[#6d7175]">
             Manage annual membership and member outreach
@@ -120,6 +119,8 @@ export default function ClubCottonwood() {
           lastSyncAt={stats?.lastSyncAt}
           onSync={() => syncMutation.mutate()}
           isSyncing={syncMutation.isPending}
+          syncResult={syncMutation.data}
+          syncError={syncMutation.error?.message}
         />
       </div>
 

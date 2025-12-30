@@ -60,6 +60,7 @@ export interface SyncResponse {
   success: boolean;
   newMembers: number;
   updatedMembers: number;
+  totalOrders?: number;
   syncedAt: string;
 }
 
