@@ -2,6 +2,12 @@
 
 export type MembershipStatus = 'Prospect' | 'Active' | 'Overdue' | 'Expired' | 'Lapsed';
 
+export interface ClubMemberOrder {
+  orderNumber: string;
+  orderDate: string;
+  isOriginalOrder: boolean;
+}
+
 export interface ClubMember {
   id: string;
   shopifyCustomerId: string;
@@ -17,6 +23,7 @@ export interface ClubMember {
   lastOrderNumber?: string;
   daysUntilRenewal?: number;
   notes?: string;
+  orders?: ClubMemberOrder[];
 }
 
 export interface ClubStats {

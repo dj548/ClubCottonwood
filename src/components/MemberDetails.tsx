@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { clubCottonwoodApi } from '../api/clubCottonwood';
 import type { ClubMember } from '../types/clubCottonwood';
@@ -10,7 +10,16 @@ interface MemberDetailsProps {
   onUpdate: () => void;
 }
 
-export default function MemberDetails({ member, onClose, onUpdate }: MemberDetailsProps) {
+export default function MemberDetails({ member: initialMember, onClose, onUpdate }: MemberDetailsProps) {
+  // Fetch full member details including orders
+  const { data: memberDetails } = useQuery({
+    queryKey: ['club-cottonwood', 'member', initialMember.id],
+    queryFn: () => clubCottonwoodApi.getMember(initialMember.id),
+    initialData: initialMember,
+  });
+
+  const member = memberDetails || initialMember;
+
   const [notes, setNotes] = useState(member.notes || '');
   const [overrideDate, setOverrideDate] = useState(
     member.hasOverride && member.effectiveRenewalDueDate
@@ -200,8 +209,39 @@ export default function MemberDetails({ member, onClose, onUpdate }: MemberDetai
             />
           </div>
 
-          {/* Last Order */}
-          {member.lastOrderNumber && (
+          {/* Order History */}
+          {member.orders && member.orders.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-[#6d7175] uppercase tracking-wider mb-2">
+                Membership Order History
+              </label>
+              <div className="bg-[#f6f6f7] rounded-lg divide-y divide-[#e1e3e5]">
+                {member.orders.map((order, index) => (
+                  <div key={order.orderNumber} className="px-4 py-3 flex items-center justify-between">
+                    <div>
+                      <span className="font-medium text-[#202223]">{order.orderNumber}</span>
+                      {order.isOriginalOrder && (
+                        <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                          Original
+                        </span>
+                      )}
+                      {!order.isOriginalOrder && index === member.orders!.length - 1 && (
+                        <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
+                          Latest Renewal
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-sm text-[#6d7175]">
+                      {format(new Date(order.orderDate), 'MMM d, yyyy')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Last Order (fallback if no order history) */}
+          {!member.orders?.length && member.lastOrderNumber && (
             <div>
               <label className="block text-xs font-medium text-[#6d7175] uppercase tracking-wider mb-1">
                 Last Order
