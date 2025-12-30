@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import ClubCottonwood from './ClubCottonwood';
 import TagSearch from './pages/TagSearch';
 import EmailSettings from './pages/EmailSettings';
+import Logs from './pages/Logs';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,6 +24,7 @@ function App() {
             <Route index element={<ClubCottonwood />} />
             <Route path="search" element={<TagSearch />} />
             <Route path="settings" element={<EmailSettings />} />
+            <Route path="logs" element={<Logs />} />
           </Route>
         </Routes>
       </BrowserRouter>
