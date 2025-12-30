@@ -1,6 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
 import ClubCottonwood from './ClubCottonwood';
-import DuckIcon from './components/DuckIcon';
+import TagSearch from './pages/TagSearch';
+import EmailSettings from './pages/EmailSettings';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -14,28 +17,15 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-[#f3f4f6]">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
-          <div className="max-w-[1600px] mx-auto flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
-              style={{ background: 'linear-gradient(135deg, #6FA7CE 0%, #8EBC67 100%)' }}
-            >
-              <DuckIcon size={24} />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900">Club Cottonwood</h1>
-              <p className="text-sm text-gray-500">Membership Management</p>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main>
-          <ClubCottonwood />
-        </main>
-      </div>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<ClubCottonwood />} />
+            <Route path="search" element={<TagSearch />} />
+            <Route path="settings" element={<EmailSettings />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }

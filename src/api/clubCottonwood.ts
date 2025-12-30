@@ -56,9 +56,11 @@ export const clubCottonwoodApi = {
     return response.data;
   },
 
-  // Sync members from Shopify
+  // Sync members from Shopify (longer timeout for large datasets)
   sync: async (): Promise<SyncResponse> => {
-    const response = await apiClient.post('/admin/club-cottonwood/sync');
+    const response = await apiClient.post('/admin/club-cottonwood/sync', {}, {
+      timeout: 300000, // 5 minute timeout for sync
+    });
     return response.data;
   },
 
@@ -71,6 +73,20 @@ export const clubCottonwoodApi = {
   // Send email to selected members
   sendEmail: async (data: ClubEmailRequest): Promise<ClubEmailResponse> => {
     const response = await apiClient.post('/admin/club-cottonwood/email', data);
+    return response.data;
+  },
+
+  // Get available customer tags from Shopify
+  getTags: async (): Promise<{ name: string; count: number }[]> => {
+    const response = await apiClient.get('/admin/club-cottonwood/tags');
+    return response.data;
+  },
+
+  // Get customers by tag
+  getCustomersByTag: async (tag: string): Promise<any[]> => {
+    const response = await apiClient.get('/admin/club-cottonwood/customers-by-tag', {
+      params: { tag },
+    });
     return response.data;
   },
 };
