@@ -9,6 +9,9 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
+# Cache buster to force rebuild
+ARG CACHEBUST=1
+
 # Copy source files
 COPY . .
 
