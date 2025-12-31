@@ -188,7 +188,7 @@ export default function ClubCottonwood() {
                 placeholder="Search by name or email..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-80 pl-10 pr-4 py-2 border border-[#e1e3e5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5CB3E5] focus:border-transparent"
+                className="w-80 pl-10 pr-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5CB3E5] focus:border-[#5CB3E5]"
               />
               <svg
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6d7175]"
