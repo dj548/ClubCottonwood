@@ -1,16 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { clubCottonwoodApi } from '../api/clubCottonwood';
 
-interface ForecastItem {
-  month: string;
-  monthShort: string;
-  total: number;
-  renewed: number;
-  outstanding: number;
-  isPast: boolean;
-  isCurrent: boolean;
-}
-
 export default function RenewalForecast() {
   const { data: forecast, isLoading } = useQuery({
     queryKey: ['club-cottonwood', 'renewal-forecast'],
