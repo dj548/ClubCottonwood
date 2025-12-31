@@ -14,7 +14,7 @@ interface ForecastItem {
 export default function RenewalForecast() {
   const { data: forecast, isLoading } = useQuery({
     queryKey: ['club-cottonwood', 'renewal-forecast'],
-    queryFn: () => clubCottonwoodApi.getRenewalForecast() as Promise<ForecastItem[]>,
+    queryFn: () => clubCottonwoodApi.getRenewalForecast(),
   });
 
   if (isLoading || !forecast) {

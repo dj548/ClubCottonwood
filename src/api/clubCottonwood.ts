@@ -26,8 +26,8 @@ export const clubCottonwoodApi = {
     return response.data;
   },
 
-  // Get renewal forecast for next 12 months
-  getRenewalForecast: async (): Promise<{ month: string; monthShort: string; renewals: number }[]> => {
+  // Get renewal forecast - past 3 months + next 12 months with renewed/outstanding split
+  getRenewalForecast: async (): Promise<{ month: string; monthShort: string; total: number; renewed: number; outstanding: number; isPast: boolean; isCurrent: boolean }[]> => {
     const response = await apiClient.get('/admin/club-cottonwood/renewal-forecast');
     return response.data;
   },
