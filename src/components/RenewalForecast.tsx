@@ -23,11 +23,13 @@ export default function RenewalForecast() {
         Renewal Forecast
       </h3>
 
-      <div className="h-44 flex items-end gap-1.5">
+      <div className="h-48 flex items-end gap-1.5">
         {forecast.map((item) => {
-          const totalHeight = maxTotal > 0 ? (item.total / maxTotal) * 100 : 0;
-          const renewedHeight = item.total > 0 ? (item.renewed / item.total) * totalHeight : 0;
-          const outstandingHeight = item.total > 0 ? (item.outstanding / item.total) * totalHeight : 0;
+          // Calculate bar height as percentage of max (for the total bar height)
+          const barHeightPercent = maxTotal > 0 ? (item.total / maxTotal) * 100 : 0;
+          // Calculate portions within the bar
+          const renewedPortion = item.total > 0 ? (item.renewed / item.total) * 100 : 0;
+          const outstandingPortion = item.total > 0 ? (item.outstanding / item.total) * 100 : 0;
 
           return (
             <div
@@ -35,17 +37,24 @@ export default function RenewalForecast() {
               className="flex-1 flex flex-col items-center gap-1"
             >
               {/* Bar container */}
-              <div className="w-full flex flex-col items-center justify-end h-32">
+              <div className="w-full flex flex-col items-center justify-end h-36">
                 {item.total > 0 && (
                   <span className="text-xs text-gray-600 mb-1">{item.total}</span>
                 )}
-                <div className="w-full flex flex-col-reverse rounded-t overflow-hidden" style={{ minHeight: item.total > 0 ? '8px' : '2px' }}>
+                {/* Stacked bar - height based on total, internally split by renewed/outstanding */}
+                <div
+                  className="w-full flex flex-col-reverse rounded-t overflow-hidden"
+                  style={{
+                    height: item.total > 0 ? `${Math.max(barHeightPercent, 5)}%` : '2px',
+                    minHeight: item.total > 0 ? '8px' : '2px'
+                  }}
+                >
                   {/* Renewed portion (bottom - green) */}
                   {item.renewed > 0 && (
                     <div
                       className="w-full transition-all"
                       style={{
-                        height: `${Math.max(renewedHeight, 2)}%`,
+                        height: `${renewedPortion}%`,
                         backgroundColor: '#22c55e', // green-500
                         minHeight: '4px',
                       }}
@@ -57,7 +66,7 @@ export default function RenewalForecast() {
                     <div
                       className="w-full transition-all"
                       style={{
-                        height: `${Math.max(outstandingHeight, 2)}%`,
+                        height: `${outstandingPortion}%`,
                         backgroundColor: item.isPast
                           ? '#ef4444' // red for past due
                           : item.isCurrent
@@ -72,7 +81,7 @@ export default function RenewalForecast() {
                   {item.total === 0 && (
                     <div
                       className="w-full bg-gray-100"
-                      style={{ height: '2px' }}
+                      style={{ height: '100%' }}
                     />
                   )}
                 </div>
