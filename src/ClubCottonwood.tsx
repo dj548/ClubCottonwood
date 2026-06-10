@@ -150,9 +150,45 @@ export default function ClubCottonwood() {
     },
   });
 
-  // Test email
+  // Test email - sends via existing email endpoint
   const testEmailMutation = useMutation({
-    mutationFn: () => clubCottonwoodApi.sendTestExpiryEmail('dj@cottonwoodinthepark.com'),
+    mutationFn: async () => {
+      // Find Dan's member ID from the current data, or send directly
+      const allMembers = await clubCottonwoodApi.getMembers({ search: 'dj@cottonwoodinthepark.com', pageSize: 1 });
+      if (allMembers.members.length === 0) throw new Error('Member not found');
+      const member = allMembers.members[0];
+      return clubCottonwoodApi.sendEmail({
+        memberIds: [member.id],
+        subject: 'Your Club Cottonwood membership expires today',
+        htmlBody: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #202223;">Hi Dan,</h2>
+    <p style="color: #333; font-size: 16px; line-height: 1.6;">
+        Thank you so much for being a Club Cottonwood member this past year! We've truly loved having you
+        as part of our community and hope you've enjoyed the perks and discounts that come with membership.
+    </p>
+    <p style="color: #333; font-size: 16px; line-height: 1.6;">
+        Your membership expires today, and we'd love to have you back for another year. Renewing is easy —
+        just click the link below to purchase your membership online:
+    </p>
+    <p style="text-align: center; margin: 24px 0;">
+        <a href="https://cottonwoodinthepark.com/products/club-cottonwood"
+           style="display: inline-block; padding: 14px 28px; background-color: #5CB3E5; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600;">
+            Renew My Membership
+        </a>
+    </p>
+    <p style="color: #333; font-size: 16px; line-height: 1.6;">
+        Upon purchase, don't forget to visit the store to pick up your free membership gift!
+    </p>
+    <p style="color: #333; font-size: 16px; line-height: 1.6;">
+        If you have any questions, feel free to reply to this email or stop by the shop. We hope to see you soon!
+    </p>
+    <p style="color: #6d7175; font-size: 14px; margin-top: 24px;">
+        With gratitude,<br/>
+        — The Cottonwood Team
+    </p>
+</div>`,
+      });
+    },
   });
 
   // CSV Export
