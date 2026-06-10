@@ -118,6 +118,23 @@ export const clubCottonwoodApi = {
     return response.data;
   },
 
+  // Get activity logs for a specific member
+  getMemberActivityLogs: async (memberId: string): Promise<{
+    id: string;
+    activityType: string;
+    description: string;
+    memberId: string | null;
+    memberName: string | null;
+    memberEmail: string | null;
+    details: string | null;
+    createdAt: string;
+  }[]> => {
+    const response = await apiClient.get('/admin/club-cottonwood/activity-logs', {
+      params: { memberId, limit: 50 },
+    });
+    return response.data;
+  },
+
   // Get activity logs (user actions like emails sent, tag changes)
   getActivityLogs: async (limit: number = 100, type?: string): Promise<{
     id: string;

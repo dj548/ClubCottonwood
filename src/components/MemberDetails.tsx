@@ -18,6 +18,12 @@ export default function MemberDetails({ member: initialMember, onClose, onUpdate
     initialData: initialMember,
   });
 
+  // Fetch activity history for this member
+  const { data: activityLogs } = useQuery({
+    queryKey: ['club-cottonwood', 'member-activity', initialMember.id],
+    queryFn: () => clubCottonwoodApi.getMemberActivityLogs(initialMember.id),
+  });
+
   const member = memberDetails || initialMember;
 
   const [notes, setNotes] = useState(member.notes || '');
@@ -249,6 +255,57 @@ export default function MemberDetails({ member: initialMember, onClose, onUpdate
               <p className="text-[#202223]">{member.lastOrderNumber}</p>
             </div>
           )}
+
+          {/* Activity History */}
+          <div>
+            <label className="block text-xs font-medium text-[#6d7175] uppercase tracking-wider mb-2">
+              Activity History
+            </label>
+            {activityLogs && activityLogs.length > 0 ? (
+              <div className="bg-[#f6f6f7] rounded-lg divide-y divide-[#e1e3e5] max-h-48 overflow-y-auto">
+                {activityLogs.map((log) => {
+                  const activityLabels: Record<string, string> = {
+                    email_sent: 'Email Sent',
+                    tag_added: 'Tag Added',
+                    tag_removed: 'Tag Removed',
+                    auto_email_expiry: 'Auto: Expiry Email',
+                    auto_tag_removed: 'Auto: Tag Removed',
+                    manual_renewal: 'Manual Renewal',
+                    opted_out: 'Opted Out',
+                    opted_in: 'Opted In',
+                  };
+                  const activityColors: Record<string, string> = {
+                    email_sent: 'bg-blue-100 text-blue-800',
+                    tag_added: 'bg-green-100 text-green-800',
+                    tag_removed: 'bg-red-100 text-red-800',
+                    auto_email_expiry: 'bg-purple-100 text-purple-800',
+                    auto_tag_removed: 'bg-orange-100 text-orange-800',
+                    manual_renewal: 'bg-green-100 text-green-800',
+                    opted_out: 'bg-gray-100 text-gray-800',
+                    opted_in: 'bg-gray-100 text-gray-800',
+                  };
+                  return (
+                    <div key={log.id} className="px-4 py-3">
+                      <div className="flex items-center justify-between">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${activityColors[log.activityType] || 'bg-gray-100 text-gray-800'}`}>
+                          {activityLabels[log.activityType] || log.activityType}
+                        </span>
+                        <span className="text-xs text-[#8c9196]">
+                          {format(new Date(log.createdAt), 'MMM d, yyyy h:mm a')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-[#202223] mt-1">{log.description}</p>
+                      {log.details && (
+                        <p className="text-xs text-[#8c9196] mt-0.5">{log.details}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-[#8c9196]">No activity recorded</p>
+            )}
+          </div>
         </div>
 
         {/* Footer */}
