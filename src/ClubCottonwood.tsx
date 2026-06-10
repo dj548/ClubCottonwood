@@ -433,8 +433,8 @@ export default function ClubCottonwood() {
 
       {/* Bulk Remove Tag Confirmation */}
       {showBulkConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowBulkConfirm(null)}>
+          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirm Tag Removal</h3>
             <p className="text-sm text-gray-600 mb-4">
               {showBulkConfirm === 'selected'
@@ -470,8 +470,8 @@ export default function ClubCottonwood() {
 
       {/* Bulk Result Modal */}
       {bulkResult && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setBulkResult(null)}>
+          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Tag Removal Complete</h3>
             <div className="text-sm text-gray-600 mb-4">
               <p>Successfully removed: <span className="font-medium text-green-600">{bulkResult.removedCount}</span></p>
