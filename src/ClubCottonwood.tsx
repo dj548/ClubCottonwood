@@ -150,18 +150,9 @@ export default function ClubCottonwood() {
     },
   });
 
-  // Test email - sends via existing email endpoint
-  const testEmailMutation = useMutation({
-    mutationFn: async () => {
-      // Find Dan's member ID from the current data, or send directly
-      const allMembers = await clubCottonwoodApi.getMembers({ search: 'dj@cottonwoodinthepark.com', pageSize: 1 });
-      if (allMembers.members.length === 0) throw new Error('Member not found');
-      const member = allMembers.members[0];
-      return clubCottonwoodApi.sendEmail({
-        memberIds: [member.id],
-        subject: 'Your Club Cottonwood membership expires today',
-        htmlBody: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-    <h2 style="color: #202223;">Hi Dan,</h2>
+  // Expiry email template
+  const expiryEmailHtml = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #202223;">Hi there,</h2>
     <p style="color: #333; font-size: 16px; line-height: 1.6;">
         Thank you so much for being a Club Cottonwood member this past year! We've truly loved having you
         as part of our community and hope you've enjoyed the perks and discounts that come with membership.
@@ -186,8 +177,21 @@ export default function ClubCottonwood() {
         With gratitude,<br/>
         — The Cottonwood Team
     </p>
-</div>`,
-      });
+</div>`;
+
+  // Send expiry email to selected members
+  const [showExpiryConfirm, setShowExpiryConfirm] = useState(false);
+  const sendExpiryEmailMutation = useMutation({
+    mutationFn: (memberIds: string[]) => clubCottonwoodApi.sendEmail({
+      memberIds,
+      subject: 'Your Club Cottonwood membership expires today',
+      htmlBody: expiryEmailHtml,
+    }),
+    onSuccess: (data) => {
+      setShowExpiryConfirm(false);
+      setSelectedMembers([]);
+      setBulkResult({ removedCount: data.sentCount, failedCount: data.failedCount });
+      queryClient.invalidateQueries({ queryKey: ['club-cottonwood'] });
     },
   });
 
@@ -248,13 +252,6 @@ export default function ClubCottonwood() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => testEmailMutation.mutate()}
-            disabled={testEmailMutation.isPending}
-            className="px-3 py-2 text-xs font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-          >
-            {testEmailMutation.isPending ? 'Sending...' : testEmailMutation.isSuccess ? 'Sent!' : 'Test Expiry Email'}
-          </button>
           <SyncStatus
             lastSyncAt={stats?.lastSyncAt}
             onSync={(full) => syncMutation.mutate(full ?? false)}
@@ -402,6 +399,15 @@ export default function ClubCottonwood() {
                     Remove Tag for Selected
                   </button>
                   <button
+                    onClick={() => setShowExpiryConfirm(true)}
+                    className="px-4 py-2 bg-purple-500 text-white rounded-lg text-sm font-medium hover:bg-purple-600 transition-colors flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Send Expiry Email
+                  </button>
+                  <button
                     onClick={() => setShowEmailComposer(true)}
                     className="px-4 py-2 bg-[#5CB3E5] text-white rounded-lg text-sm font-medium hover:bg-[#45A5DB] transition-colors flex items-center gap-2"
                   >
@@ -481,6 +487,33 @@ export default function ClubCottonwood() {
         />
       )}
 
+      {/* Send Expiry Email Confirmation */}
+      {showExpiryConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowExpiryConfirm(false)}>
+          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Send Expiry Email</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Send the membership expiry reminder email to {selectedMembers.length} selected member{selectedMembers.length === 1 ? '' : 's'}? This includes the renewal link and gift reminder.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowExpiryConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => sendExpiryEmailMutation.mutate(selectedMembers)}
+                disabled={sendExpiryEmailMutation.isPending}
+                className="px-4 py-2 text-sm font-medium text-white bg-purple-500 rounded-lg hover:bg-purple-600 disabled:opacity-50"
+              >
+                {sendExpiryEmailMutation.isPending ? 'Sending...' : 'Send Emails'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Bulk Remove Tag Confirmation */}
       {showBulkConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowBulkConfirm(null)}>
@@ -522,9 +555,9 @@ export default function ClubCottonwood() {
       {bulkResult && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setBulkResult(null)}>
           <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Tag Removal Complete</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Action Complete</h3>
             <div className="text-sm text-gray-600 mb-4">
-              <p>Successfully removed: <span className="font-medium text-green-600">{bulkResult.removedCount}</span></p>
+              <p>Successful: <span className="font-medium text-green-600">{bulkResult.removedCount}</span></p>
               {bulkResult.failedCount > 0 && (
                 <p>Failed: <span className="font-medium text-red-600">{bulkResult.failedCount}</span></p>
               )}
