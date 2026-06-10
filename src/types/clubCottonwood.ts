@@ -8,6 +8,12 @@ export interface ClubMemberOrder {
   isOriginalOrder: boolean;
 }
 
+export interface ClubMemberLastActivity {
+  type: string;
+  description: string;
+  date: string;
+}
+
 export interface ClubMember {
   id: string;
   shopifyCustomerId: string;
@@ -24,6 +30,7 @@ export interface ClubMember {
   daysUntilRenewal?: number;
   notes?: string;
   orders?: ClubMemberOrder[];
+  lastActivity?: ClubMemberLastActivity | null;
 }
 
 export interface ClubStats {
@@ -73,4 +80,11 @@ export interface SyncResponse {
 
 export interface SyncStatusResponse {
   lastSyncAt?: string;
+}
+
+export interface BulkRemoveTagResponse {
+  success: boolean;
+  removedCount: number;
+  failedCount: number;
+  memberNames?: string[];
 }

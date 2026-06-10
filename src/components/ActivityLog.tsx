@@ -2,18 +2,22 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { clubCottonwoodApi } from '../api/clubCottonwood';
 
-type ActivityType = 'all' | 'email_sent' | 'tag_added' | 'tag_removed';
+type ActivityType = 'all' | 'email_sent' | 'tag_added' | 'tag_removed' | 'auto_email_expiry' | 'auto_tag_removed';
 
 const activityTypeLabels: Record<string, string> = {
   email_sent: 'Email Sent',
   tag_added: 'Tag Added',
   tag_removed: 'Tag Removed',
+  auto_email_expiry: 'Auto: Expiry Email',
+  auto_tag_removed: 'Auto: Tag Removed',
 };
 
 const activityTypeColors: Record<string, string> = {
   email_sent: 'bg-blue-100 text-blue-800',
   tag_added: 'bg-green-100 text-green-800',
   tag_removed: 'bg-red-100 text-red-800',
+  auto_email_expiry: 'bg-purple-100 text-purple-800',
+  auto_tag_removed: 'bg-orange-100 text-orange-800',
 };
 
 export default function ActivityLog() {
@@ -50,6 +54,8 @@ export default function ActivityLog() {
     { id: 'email_sent', label: 'Emails' },
     { id: 'tag_added', label: 'Tags Added' },
     { id: 'tag_removed', label: 'Tags Removed' },
+    { id: 'auto_email_expiry', label: 'Auto Emails' },
+    { id: 'auto_tag_removed', label: 'Auto Removals' },
   ];
 
   return (
@@ -95,15 +101,25 @@ export default function ActivityLog() {
                 {/* Icon */}
                 <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                   log.activityType === 'email_sent' ? 'bg-blue-100' :
-                  log.activityType === 'tag_added' ? 'bg-green-100' : 'bg-red-100'
+                  log.activityType === 'auto_email_expiry' ? 'bg-purple-100' :
+                  log.activityType === 'tag_added' ? 'bg-green-100' :
+                  log.activityType === 'auto_tag_removed' ? 'bg-orange-100' : 'bg-red-100'
                 }`}>
                   {log.activityType === 'email_sent' ? (
                     <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
+                  ) : log.activityType === 'auto_email_expiry' ? (
+                    <svg className="w-4 h-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   ) : log.activityType === 'tag_added' ? (
                     <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  ) : log.activityType === 'auto_tag_removed' ? (
+                    <svg className="w-4 h-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   ) : (
                     <svg className="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">

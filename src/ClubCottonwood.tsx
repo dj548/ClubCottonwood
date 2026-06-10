@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clubCottonwoodApi } from './api/clubCottonwood';
 import type { ClubMember, MembershipStatus } from './types/clubCottonwood';
+import { format } from 'date-fns';
 import StatsCards from './components/StatsCards';
 import RenewalForecast from './components/RenewalForecast';
 import MemberTable from './components/MemberTable';
@@ -126,6 +127,71 @@ export default function ClubCottonwood() {
     setSelectedMembers([]);
   };
 
+  // Bulk remove tag mutations
+  const [showBulkConfirm, setShowBulkConfirm] = useState<'selected' | 'overdue' | null>(null);
+  const [bulkResult, setBulkResult] = useState<{ removedCount: number; failedCount: number; memberNames?: string[] } | null>(null);
+
+  const bulkRemoveTagMutation = useMutation({
+    mutationFn: (memberIds: string[]) => clubCottonwoodApi.bulkRemoveTag(memberIds),
+    onSuccess: (data) => {
+      setBulkResult(data);
+      setShowBulkConfirm(null);
+      setSelectedMembers([]);
+      queryClient.invalidateQueries({ queryKey: ['club-cottonwood'] });
+    },
+  });
+
+  const bulkRemoveTagOverdueMutation = useMutation({
+    mutationFn: () => clubCottonwoodApi.bulkRemoveTagOverdue(),
+    onSuccess: (data) => {
+      setBulkResult(data);
+      setShowBulkConfirm(null);
+      queryClient.invalidateQueries({ queryKey: ['club-cottonwood'] });
+    },
+  });
+
+  // CSV Export
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportCsv = useCallback(async () => {
+    setIsExporting(true);
+    try {
+      const data = await clubCottonwoodApi.getMembers({
+        status: statusFilter,
+        hasQuackTag: hasQuackTagFilter,
+        search: searchQuery || undefined,
+        page: 1,
+        pageSize: 99999,
+      });
+
+      const headers = ['Name', 'Email', 'Phone', 'Status', 'Quack Tag', 'Renewal Date', 'Days Until Renewal', 'Last Order'];
+      const rows = data.members.map((m: ClubMember) => [
+        m.name,
+        m.email,
+        m.phone || '',
+        m.status,
+        m.hasQuackTag ? 'Yes' : 'No',
+        m.effectiveRenewalDueDate ? format(new Date(m.effectiveRenewalDueDate), 'yyyy-MM-dd') : '',
+        m.daysUntilRenewal?.toString() || '',
+        m.lastOrderNumber || '',
+      ]);
+
+      const csvContent = [headers, ...rows]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `club-cottonwood-${activeTab}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [statusFilter, hasQuackTagFilter, searchQuery, activeTab]);
+
   const isLoading = loadingStats || loadingMembers;
 
   return (
@@ -222,52 +288,87 @@ export default function ClubCottonwood() {
 
           {/* Search and Actions Bar */}
           <div className="flex items-center justify-between mb-4">
-            <div className="relative">
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search by name or email..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="w-80 pl-10 pr-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5CB3E5] focus:border-[#5CB3E5]"
-              />
-              <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6d7175]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search by name or email..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="w-80 pl-10 pr-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5CB3E5] focus:border-[#5CB3E5]"
                 />
-              </svg>
+                <svg
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6d7175]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              <button
+                onClick={handleExportCsv}
+                disabled={isExporting}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {isExporting ? 'Exporting...' : 'Export CSV'}
+              </button>
             </div>
 
-            {selectedMembers.length > 0 && (
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-[#6d7175]">
-                  {selectedMembers.length} selected
-                </span>
+            <div className="flex items-center gap-3">
+              {activeTab === 'overdue' && (
                 <button
-                  onClick={() => setShowEmailComposer(true)}
-                  className="px-4 py-2 bg-[#5CB3E5] text-white rounded-lg text-sm font-medium hover:bg-[#45A5DB] transition-colors flex items-center gap-2"
+                  onClick={() => setShowBulkConfirm('overdue')}
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors flex items-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
-                  Send Email
+                  Remove Tag for 30+ Days Overdue
                 </button>
-                <button
-                  onClick={() => setSelectedMembers([])}
-                  className="text-sm text-[#6d7175] hover:text-[#202223]"
-                >
-                  Clear selection
-                </button>
-              </div>
-            )}
+              )}
+
+              {selectedMembers.length > 0 && (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-[#6d7175]">
+                    {selectedMembers.length} selected
+                  </span>
+                  <button
+                    onClick={() => setShowBulkConfirm('selected')}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    Remove Tag for Selected
+                  </button>
+                  <button
+                    onClick={() => setShowEmailComposer(true)}
+                    className="px-4 py-2 bg-[#5CB3E5] text-white rounded-lg text-sm font-medium hover:bg-[#45A5DB] transition-colors flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Send Email
+                  </button>
+                  <button
+                    onClick={() => setSelectedMembers([])}
+                    className="text-sm text-[#6d7175] hover:text-[#202223]"
+                  >
+                    Clear selection
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Member Table */}
@@ -328,6 +429,76 @@ export default function ClubCottonwood() {
           onClose={() => setShowEmailComposer(false)}
           onSent={handleEmailSent}
         />
+      )}
+
+      {/* Bulk Remove Tag Confirmation */}
+      {showBulkConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirm Tag Removal</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              {showBulkConfirm === 'selected'
+                ? `Remove the Quack tag from ${selectedMembers.length} selected member${selectedMembers.length === 1 ? '' : 's'}? This will update their status in Shopify.`
+                : 'Remove the Quack tag from all members who are 30+ days overdue? This will update their status in Shopify.'}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowBulkConfirm(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (showBulkConfirm === 'selected') {
+                    bulkRemoveTagMutation.mutate(selectedMembers);
+                  } else {
+                    bulkRemoveTagOverdueMutation.mutate();
+                  }
+                }}
+                disabled={bulkRemoveTagMutation.isPending || bulkRemoveTagOverdueMutation.isPending}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 disabled:opacity-50"
+              >
+                {bulkRemoveTagMutation.isPending || bulkRemoveTagOverdueMutation.isPending
+                  ? 'Removing...'
+                  : 'Remove Tags'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Result Modal */}
+      {bulkResult && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Tag Removal Complete</h3>
+            <div className="text-sm text-gray-600 mb-4">
+              <p>Successfully removed: <span className="font-medium text-green-600">{bulkResult.removedCount}</span></p>
+              {bulkResult.failedCount > 0 && (
+                <p>Failed: <span className="font-medium text-red-600">{bulkResult.failedCount}</span></p>
+              )}
+              {bulkResult.memberNames && bulkResult.memberNames.length > 0 && (
+                <div className="mt-2">
+                  <p className="font-medium text-gray-700 mb-1">Members affected:</p>
+                  <ul className="list-disc list-inside text-xs text-gray-500 max-h-32 overflow-y-auto">
+                    {bulkResult.memberNames.map((name, i) => (
+                      <li key={i}>{name}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setBulkResult(null)}
+                className="px-4 py-2 text-sm font-medium text-white bg-[#5CB3E5] rounded-lg hover:bg-[#45A5DB]"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

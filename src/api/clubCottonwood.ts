@@ -9,6 +9,7 @@ import type {
   SyncResponse,
   SyncStatusResponse,
   MembershipStatus,
+  BulkRemoveTagResponse,
 } from '../types/clubCottonwood';
 
 export interface GetMembersParams {
@@ -94,6 +95,18 @@ export const clubCottonwoodApi = {
     const response = await apiClient.get('/admin/club-cottonwood/customers-by-tag', {
       params: { tag },
     });
+    return response.data;
+  },
+
+  // Bulk remove Quack tag from selected members
+  bulkRemoveTag: async (memberIds: string[]): Promise<BulkRemoveTagResponse> => {
+    const response = await apiClient.post('/admin/club-cottonwood/members/bulk-remove-tag', { memberIds });
+    return response.data;
+  },
+
+  // Bulk remove Quack tag from all members 30+ days overdue
+  bulkRemoveTagOverdue: async (): Promise<BulkRemoveTagResponse> => {
+    const response = await apiClient.post('/admin/club-cottonwood/members/bulk-remove-tag-overdue');
     return response.data;
   },
 

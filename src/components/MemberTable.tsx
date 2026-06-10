@@ -39,6 +39,42 @@ export default function MemberTable({
     }
   };
 
+  const getLastActionLabel = (member: ClubMember) => {
+    if (!member.lastActivity) return <span className="text-[#8c9196]">-</span>;
+
+    const date = new Date(member.lastActivity.date);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    let timeAgo: string;
+    if (diffMins < 1) timeAgo = 'just now';
+    else if (diffMins < 60) timeAgo = `${diffMins}m ago`;
+    else if (diffHours < 24) timeAgo = `${diffHours}h ago`;
+    else timeAgo = `${diffDays}d ago`;
+
+    const actionLabels: Record<string, string> = {
+      email_sent: 'Email sent',
+      tag_added: 'Tag added',
+      tag_removed: 'Tag removed',
+      auto_email_expiry: 'Expiry email',
+      auto_tag_removed: 'Auto tag removed',
+      manual_renewal: 'Renewed',
+      opted_out: 'Opted out',
+      opted_in: 'Opted in',
+    };
+
+    const label = actionLabels[member.lastActivity.type] || member.lastActivity.type;
+
+    return (
+      <span className="text-xs text-[#6d7175]">
+        {label} {timeAgo}
+      </span>
+    );
+  };
+
   const getDaysLabel = (days: number | undefined) => {
     if (days === undefined || days === null) return '-';
     if (days < 0) {
@@ -111,6 +147,9 @@ export default function MemberTable({
             <th className="px-4 py-3 text-left text-xs font-semibold text-[#6d7175] uppercase tracking-wider">
               Last Order
             </th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-[#6d7175] uppercase tracking-wider">
+              Last Action
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-[#e1e3e5]">
@@ -164,6 +203,9 @@ export default function MemberTable({
               </td>
               <td className="px-4 py-3 text-sm text-[#6d7175]">
                 {member.lastOrderNumber || '-'}
+              </td>
+              <td className="px-4 py-3">
+                {getLastActionLabel(member)}
               </td>
             </tr>
           ))}
