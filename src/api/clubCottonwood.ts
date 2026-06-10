@@ -110,6 +110,14 @@ export const clubCottonwoodApi = {
     return response.data;
   },
 
+  // Send test expiry email
+  sendTestExpiryEmail: async (email: string): Promise<{ success: boolean; messageId?: string; error?: string }> => {
+    const response = await apiClient.post(`/admin/club-cottonwood/debug/test-expiry-email`, null, {
+      params: { email },
+    });
+    return response.data;
+  },
+
   // Get activity logs (user actions like emails sent, tag changes)
   getActivityLogs: async (limit: number = 100, type?: string): Promise<{
     id: string;

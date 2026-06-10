@@ -150,6 +150,11 @@ export default function ClubCottonwood() {
     },
   });
 
+  // Test email
+  const testEmailMutation = useMutation({
+    mutationFn: () => clubCottonwoodApi.sendTestExpiryEmail('dj@cottonwoodinthepark.com'),
+  });
+
   // CSV Export
   const [isExporting, setIsExporting] = useState(false);
 
@@ -206,14 +211,23 @@ export default function ClubCottonwood() {
             Manage annual membership and member outreach
           </p>
         </div>
-        <SyncStatus
-          lastSyncAt={stats?.lastSyncAt}
-          onSync={(full) => syncMutation.mutate(full ?? false)}
-          isSyncing={syncMutation.isPending}
-          syncResult={syncMutation.data}
-          syncError={syncMutation.error?.message}
-          isFullSync={isFullSync}
-        />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => testEmailMutation.mutate()}
+            disabled={testEmailMutation.isPending}
+            className="px-3 py-2 text-xs font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+          >
+            {testEmailMutation.isPending ? 'Sending...' : testEmailMutation.isSuccess ? 'Sent!' : 'Test Expiry Email'}
+          </button>
+          <SyncStatus
+            lastSyncAt={stats?.lastSyncAt}
+            onSync={(full) => syncMutation.mutate(full ?? false)}
+            isSyncing={syncMutation.isPending}
+            syncResult={syncMutation.data}
+            syncError={syncMutation.error?.message}
+            isFullSync={isFullSync}
+          />
+        </div>
       </div>
 
       {isLoading && !membersData ? (
