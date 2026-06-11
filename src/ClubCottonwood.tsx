@@ -150,16 +150,20 @@ export default function ClubCottonwood() {
     },
   });
 
-  // Expiry email template
-  const expiryEmailHtml = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  // Renewal reminder email template (for manual sends from UI — membership already expired)
+  const renewalReminderHtml = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
     <h2 style="color: #202223;">Hi there,</h2>
     <p style="color: #333; font-size: 16px; line-height: 1.6;">
-        Thank you so much for being a Club Cottonwood member this past year! We've truly loved having you
+        Thank you so much for being a Club Cottonwood member! We've truly loved having you
         as part of our community and hope you've enjoyed the perks and discounts that come with membership.
     </p>
     <p style="color: #333; font-size: 16px; line-height: 1.6;">
-        Your membership expires today, and we'd love to have you back for another year. Renewing is easy —
-        just click the link below to purchase your membership online:
+        We wanted to let you know that your membership has expired, and we'd love to have you back!
+        As a reminder, your membership gets you <strong>10% off quilting, arts, and craft items (QUACk)</strong> —
+        and it stacks on other sales.
+    </p>
+    <p style="color: #333; font-size: 16px; line-height: 1.6;">
+        Renewing is easy — just click the link below to purchase your membership online:
     </p>
     <p style="text-align: center; margin: 24px 0;">
         <a href="https://cottonwoodinthepark.com/products/club-cottonwood"
@@ -179,13 +183,13 @@ export default function ClubCottonwood() {
     </p>
 </div>`;
 
-  // Send expiry email to selected members
+  // Send renewal reminder email to selected members
   const [showExpiryConfirm, setShowExpiryConfirm] = useState(false);
   const sendExpiryEmailMutation = useMutation({
     mutationFn: (memberIds: string[]) => clubCottonwoodApi.sendEmail({
       memberIds,
-      subject: 'Your Club Cottonwood membership expires today',
-      htmlBody: expiryEmailHtml,
+      subject: 'We miss you at Club Cottonwood — renew your membership!',
+      htmlBody: renewalReminderHtml,
     }),
     onSuccess: (data) => {
       setShowExpiryConfirm(false);
@@ -405,7 +409,7 @@ export default function ClubCottonwood() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Send Expiry Email
+                    Send Renewal Reminder
                   </button>
                   <button
                     onClick={() => setShowEmailComposer(true)}
@@ -491,9 +495,9 @@ export default function ClubCottonwood() {
       {showExpiryConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowExpiryConfirm(false)}>
           <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Send Expiry Email</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Send Renewal Reminder</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Send the membership expiry reminder email to {selectedMembers.length} selected member{selectedMembers.length === 1 ? '' : 's'}? This includes the renewal link and gift reminder.
+              Send a renewal reminder email to {selectedMembers.length} selected member{selectedMembers.length === 1 ? '' : 's'}? This includes the renewal link, QUACk discount info, and gift reminder. Emails are sent in batches of 10.
             </p>
             <div className="flex justify-end gap-3">
               <button
